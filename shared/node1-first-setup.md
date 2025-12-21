@@ -245,7 +245,7 @@ The panel will function normally despite this warning. If you want to suppress i
 ### Authentik "registry: denied" error
 If you see a "registry: denied" error when trying to start Authentik:
 
-**This has been fixed** by updating the configuration to use the `beryju/authentik` image from Docker Hub instead of the GitHub Container Registry image. The new configuration also includes the required PostgreSQL and Redis services that Authentik needs.
+**This has been fixed** by updating the configuration to use the official `authentik/server` image from Docker Hub (see [Docker Hub](https://hub.docker.com/r/authentik/server)). The new configuration also includes the required PostgreSQL and Redis services that Authentik needs.
 
 **If you still see the error:**
 1. Make sure you've updated your `docker-compose.yml` file with the latest version

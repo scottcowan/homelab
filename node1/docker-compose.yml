@@ -100,7 +100,7 @@ services:
       - homelab
 
   authentik:
-    image: beryju/authentik:latest
+    image: authentik/server:latest
     container_name: authentik
     restart: unless-stopped
     environment:
