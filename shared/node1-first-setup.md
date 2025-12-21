@@ -74,32 +74,28 @@ nano .env
 
 Generate secure passwords and update the `.env` file automatically:
 
+**Option 1: Use the setup script (Easiest)**:
+
+```bash
+# Make script executable
+chmod +x ../shared/scripts/setup-env-node1.sh
+
+# Run the script
+../shared/scripts/setup-env-node1.sh
+```
+
+**Option 2: Run commands directly**:
+
 ```bash
 # Generate and replace passwords in .env file automatically
-# This will generate secure passwords and replace the placeholders
-
-# Generate passwords and replace in .env
 sed -i "s|DB_PASSWORD=your_db_password_here|DB_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|DB_ROOT_PASSWORD=your_db_root_password_here|DB_ROOT_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|REDIS_PASSWORD=your_redis_password_here|REDIS_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|AUTHENTIK_SECRET_KEY=generate_random_key_here|AUTHENTIK_SECRET_KEY=$(openssl rand -base64 32)|g" .env
+sed -i "s|APP_URL=.*|APP_URL=http://192.168.1.10|g" .env
 
-# Update APP_URL to match your Node 1 IP (replace 192.168.1.10 with your actual IP if different)
-sed -i "s|APP_URL=http://192.168.1.10|APP_URL=http://$(hostname -I | awk '{print $1}')|g" .env
-# Or manually set it:
-# sed -i "s|APP_URL=.*|APP_URL=http://192.168.1.10|g" .env
-
-# Verify the passwords were set (don't worry, they won't be displayed in full)
+# Verify
 grep -E "PASSWORD|SECRET_KEY|APP_URL" .env
-```
-
-**Alternative: If you prefer to manually edit with nano**, you can still generate passwords first:
-```bash
-# Generate passwords and display them (copy what you need)
-openssl rand -base64 32  # For DB_PASSWORD
-openssl rand -base64 32  # For DB_ROOT_PASSWORD
-openssl rand -base64 32  # For REDIS_PASSWORD
-openssl rand -base64 32  # For AUTHENTIK_SECRET_KEY
 ```
 
 ## Step 5: Start Core Services (Database & Redis First)
