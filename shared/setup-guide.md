@@ -109,17 +109,19 @@ Then install the panel directly on the host following Pterodactyl's documentatio
 ```bash
 cd ~/homelab/node2
 
-# Copy environment file
-cp ../shared/env-template.txt .env
+# Copy Node 2 environment template
+cp ../shared/env-template-node2.txt .env
 
-# Edit .env - you'll need the Wings token from Pterodactyl Panel
-nano .env
+# Set up Wings token using script (interactive)
+chmod +x ../shared/scripts/setup-env-node2.sh
+../shared/scripts/setup-env-node2.sh
 
-# Get Wings token from Pterodactyl Panel:
-# 1. Log into panel at http://192.168.1.10
-# 2. Go to Configuration → Nodes
-# 3. Create a new node or use existing
-# 4. Copy the Wings token
+# Or manually edit:
+# 1. Get Wings token from Pterodactyl Panel (http://192.168.1.10)
+# 2. Go to Configuration → Nodes → Create/Edit Node
+# 3. Copy the Wings token
+# 4. Edit .env: nano .env
+# 5. Replace WINGS_TOKEN=your_wings_token_here with your token
 
 # Start services
 docker compose up -d
@@ -138,14 +140,15 @@ docker compose up -d
 ```bash
 cd ~/homelab/node3
 
-# Copy environment file
-cp ../shared/env-template.txt .env
+# Copy Node 3 environment template
+cp ../shared/env-template-node3.txt .env
 
-# Edit .env with your passwords
-nano .env
+# Generate passwords automatically using script
+chmod +x ../shared/scripts/setup-env-node3.sh
+../shared/scripts/setup-env-node3.sh
 
-# Generate secure passwords
-openssl rand -base64 32  # For each password field
+# Note: INFLUXDB_TOKEN will be set after InfluxDB is running
+# Access InfluxDB at http://192.168.1.12:8086 to get the token
 
 # Start services
 docker compose up -d

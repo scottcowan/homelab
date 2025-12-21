@@ -1,0 +1,18 @@
+# Node 3 Environment Variables
+# Grafana Configuration
+GRAFANA_PASSWORD=your_grafana_password_here
+
+# InfluxDB Configuration
+INFLUXDB_PASSWORD=your_influxdb_password_here
+# INFLUXDB_TOKEN will be generated after InfluxDB is set up
+# Access InfluxDB at http://192.168.1.12:8086 to get the token
+INFLUXDB_TOKEN=your_influxdb_token_here
+
+# Docmost Configuration
+DOCMOST_PASSWORD=your_docmost_password_here
+DOCMOST_SECRET_KEY=generate_random_key_here
+
+# Linkwarden Configuration
+LINKWARDEN_PASSWORD=your_linkwarden_password_here
+LINKWARDEN_SECRET=generate_random_key_here
+

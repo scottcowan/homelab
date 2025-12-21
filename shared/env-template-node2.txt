@@ -1,0 +1,6 @@
+# Node 2 Environment Variables
+# Pterodactyl Wings Configuration
+# Get this token from Pterodactyl Panel after Node 1 is set up
+# Go to: Configuration → Nodes → Create/Edit Node → Copy Wings Token
+WINGS_TOKEN=your_wings_token_here
+

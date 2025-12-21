@@ -5,10 +5,11 @@
 if [ ! -f .env ]; then
     echo "Error: .env file not found!"
     echo "Make sure you're in the ~/homelab/node1 directory"
+    echo "First copy the template: cp ../shared/env-template-node1.txt .env"
     exit 1
 fi
 
-echo "Generating secure passwords and updating .env file..."
+echo "Generating secure passwords for Node 1..."
 
 # Generate and replace passwords
 sed -i "s|DB_PASSWORD=your_db_password_here|DB_PASSWORD=$(openssl rand -base64 32)|g" .env
@@ -24,11 +25,10 @@ if [ -z "$NODE_IP" ]; then
 fi
 sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 
-echo "✅ Passwords generated and .env file updated!"
+echo "✅ Node 1 passwords generated and .env file updated!"
 echo ""
 echo "Updated values (partial display):"
 grep -E "PASSWORD|SECRET_KEY|APP_URL" .env | sed 's/=.*/=***hidden***/'
 
 echo ""
-echo "Done! Your .env file is ready."
-
+echo "Done! Your Node 1 .env file is ready."

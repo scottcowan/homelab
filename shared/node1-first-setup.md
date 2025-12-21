@@ -65,11 +65,8 @@ mkdir -p ~/homelab/shared
 ```bash
 cd ~/homelab/node1
 
-# Copy the environment template
-cp ../shared/env-template.txt .env
-
-# Edit the .env file
-nano .env
+# Copy the Node 1 environment template
+cp ../shared/env-template-node1.txt .env
 ```
 
 Generate secure passwords and update the `.env` file automatically:
@@ -77,12 +74,14 @@ Generate secure passwords and update the `.env` file automatically:
 **Option 1: Use the setup script (Easiest)**:
 
 ```bash
-# Make script executable
+# Make script executable (one time)
 chmod +x ../shared/scripts/setup-env-node1.sh
 
 # Run the script
 ../shared/scripts/setup-env-node1.sh
 ```
+
+This will automatically generate all passwords for Node 1 and update the .env file.
 
 **Option 2: Run commands directly**:
 
