@@ -1,0 +1,34 @@
+# Environment files
+.env
+**/.env
+**/.*env
+
+# Docker volumes
+**/mariadb/
+**/redis/
+**/panel/
+**/prowlarr/
+**/qbittorrent/
+**/sonarr/
+**/radarr/
+**/lidarr/
+**/bazarr/
+**/overseerr/
+**/uptime-kuma/
+**/authentik/
+**/portainer/
+**/immich/
+**/nextcloud/
+**/nextcloud-db/
+**/grafana/
+**/influxdb/
+**/stirling-pdf/
+**/docmost/
+**/docmost-db/
+**/linkwarden/
+**/linkwarden-db/
+
+# Logs
+*.log
+**/*.log
+

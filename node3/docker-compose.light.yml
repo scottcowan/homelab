@@ -1,0 +1,138 @@
+# Lightweight Node 3 configuration - without Immich and Nextcloud
+# This reduces RAM usage from ~3.2GB to ~1.9GB, leaving 2.1GB for system
+#
+# To use this instead of the full version:
+# docker compose -f docker-compose.light.yml up -d
+#
+# OR rename: mv docker-compose.yml docker-compose.full.yml && mv docker-compose.light.yml docker-compose.yml
+
+version: '3.8'
+
+services:
+  # Grafana - Monitoring Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}  # Set in .env file
+    volumes:
+      - ./grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - homelab
+    depends_on:
+      - influxdb
+
+  # InfluxDB - Time Series Database
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}  # Set in .env file
+      - DOCKER_INFLUXDB_INIT_ORG=homelab
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+    volumes:
+      - ./influxdb:/var/lib/influxdb2
+    ports:
+      - "8086:8086"
+    networks:
+      - homelab
+
+  # Telegraf - Metrics Collector
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    restart: unless-stopped
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}  # Generate after InfluxDB setup
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - homelab
+    depends_on:
+      - influxdb
+
+  # Stirling PDF - PDF Editor
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./stirling-pdf:/configs
+    networks:
+      - homelab
+
+  # Docmost - Documentation
+  docmost:
+    image: docmost/docmost:latest
+    container_name: docmost
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://docmost:${DOCMOST_PASSWORD}@docmost-db:5432/docmost
+      - SECRET_KEY=${DOCMOST_SECRET_KEY}  # Generate a random key
+    volumes:
+      - ./docmost:/app/data
+    ports:
+      - "3002:3000"
+    networks:
+      - homelab
+    depends_on:
+      - docmost-db
+
+  docmost-db:
+    image: postgres:15-alpine
+    container_name: docmost-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=docmost
+      - POSTGRES_PASSWORD=${DOCMOST_PASSWORD}  # Set in .env file
+      - POSTGRES_DB=docmost
+    volumes:
+      - ./docmost-db:/var/lib/postgresql/data
+    networks:
+      - homelab
+
+  # Linkwarden - Bookmarks
+  linkwarden:
+    image: linkwarden/linkwarden:latest
+    container_name: linkwarden
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://linkwarden:${LINKWARDEN_PASSWORD}@linkwarden-db:5432/linkwarden
+      - NEXTAUTH_SECRET=${LINKWARDEN_SECRET}  # Generate a random key
+      - NEXTAUTH_URL=http://192.168.1.12:3003
+    volumes:
+      - ./linkwarden:/data
+    ports:
+      - "3003:3000"
+    networks:
+      - homelab
+    depends_on:
+      - linkwarden-db
+
+  linkwarden-db:
+    image: postgres:15-alpine
+    container_name: linkwarden-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=linkwarden
+      - POSTGRES_PASSWORD=${LINKWARDEN_PASSWORD}  # Set in .env file
+      - POSTGRES_DB=linkwarden
+    volumes:
+      - ./linkwarden-db:/var/lib/postgresql/data
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    driver: bridge
+

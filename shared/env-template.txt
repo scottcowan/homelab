@@ -1,0 +1,29 @@
+# Pterodactyl Configuration
+WINGS_TOKEN=your_wings_token_here
+DB_PASSWORD=your_db_password_here
+DB_ROOT_PASSWORD=your_db_root_password_here
+REDIS_PASSWORD=your_redis_password_here
+APP_URL=http://192.168.1.10
+
+# Authentik Configuration
+AUTHENTIK_SECRET_KEY=generate_random_key_here
+
+# Nextcloud Configuration
+NEXTCLOUD_DB_PASSWORD=your_nextcloud_db_password_here
+NEXTCLOUD_DB_ROOT_PASSWORD=your_nextcloud_db_root_password_here
+
+# Grafana Configuration
+GRAFANA_PASSWORD=your_grafana_password_here
+
+# InfluxDB Configuration
+INFLUXDB_PASSWORD=your_influxdb_password_here
+INFLUXDB_TOKEN=your_influxdb_token_here
+
+# Docmost Configuration
+DOCMOST_PASSWORD=your_docmost_password_here
+DOCMOST_SECRET_KEY=generate_random_key_here
+
+# Linkwarden Configuration
+LINKWARDEN_PASSWORD=your_linkwarden_password_here
+LINKWARDEN_SECRET=generate_random_key_here
+

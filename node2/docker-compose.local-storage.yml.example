@@ -1,0 +1,206 @@
+# Alternative configuration if you want to use a LOCAL drive for downloads
+# instead of NAS. This is useful if:
+# 1. You added a second drive to Node 2
+# 2. You want faster download speeds (local vs network)
+# 3. You want to use hybrid approach (local downloads, NAS for media)
+#
+# To use this:
+# 1. Add and mount your local drive to /mnt/downloads (see storage-options-node2.md)
+# 2. Copy this file: cp docker-compose.local-storage.yml.example docker-compose.local-storage.yml
+# 3. Use it: docker compose -f docker-compose.local-storage.yml up -d
+#
+# OR rename your current docker-compose.yml and use this one
+
+version: '3.8'
+
+services:
+  # Pterodactyl Wings - Game Server Daemon
+  wings:
+    image: ghcr.io/pterodactyl/wings:latest
+    container_name: wings
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "25565-25575:25565-25575"  # Minecraft and other game ports
+    environment:
+      - WINGS_DEBUG=false
+      - WINGS_PANEL_URL=http://192.168.1.10
+      - WINGS_TOKEN=${WINGS_TOKEN}  # Set in .env file
+    volumes:
+      - /var/lib/pterodactyl:/var/lib/pterodactyl
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - homelab
+
+  # Prowlarr - Indexer Manager
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./prowlarr:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  # qBittorrent - Download Client
+  # Using LOCAL drive for downloads instead of NAS
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qbittorrent:/config
+      - /mnt/downloads:/downloads  # LOCAL drive instead of NAS
+      # Optional: Also mount NAS for completed files
+      # - /mnt/nas/downloads:/downloads-complete
+    ports:
+      - "8081:8080"  # Web UI
+      - "6881:6881"  # TCP
+      - "6881:6881/udp"  # UDP
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  # Sonarr - TV Shows
+  # Configured to import from local downloads, move to NAS
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./sonarr:/config
+      - /mnt/nas/tv:/tv  # Final destination on NAS
+      - /mnt/downloads:/downloads  # Import from local drive
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Radarr - Movies
+  # Configured to import from local downloads, move to NAS
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./radarr:/config
+      - /mnt/nas/movies:/movies  # Final destination on NAS
+      - /mnt/downloads:/downloads  # Import from local drive
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Lidarr - Music
+  # Configured to import from local downloads, move to NAS
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./lidarr:/config
+      - /mnt/nas/music:/music  # Final destination on NAS
+      - /mnt/downloads:/downloads  # Import from local drive
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Readarr - Books & Audiobooks
+  # Configured to import from local downloads, move to NAS
+  readarr:
+    image: lscr.io/linuxserver/readarr:latest
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./readarr:/config
+      - /mnt/nas/audiobooks:/audiobooks  # Final destination on NAS
+      - /mnt/nas/books:/books  # Final destination on NAS (for ebooks)
+      - /mnt/downloads:/downloads  # Import from local drive
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Bazarr - Subtitles
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./bazarr:/config
+      - /mnt/nas/tv:/tv
+      - /mnt/nas/movies:/movies
+    ports:
+      - "6767:6767"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - sonarr
+      - radarr
+
+  # Overseerr - Request Management
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./overseerr:/config
+    ports:
+      - "5055:5055"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - sonarr
+      - radarr
+
+networks:
+  homelab:
+    driver: bridge
+

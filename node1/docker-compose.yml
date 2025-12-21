@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  # MySQL/MariaDB for Pterodactyl Panel
+  mariadb:
+    image: mariadb:10.11
+    container_name: pterodactyl-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: panel
+      MYSQL_USER: pterodactyl
+      MYSQL_PASSWORD: ${DB_PASSWORD}  # Set in .env file
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}  # Set in .env file
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    networks:
+      - homelab
+
+  # Redis for Pterodactyl Panel
+  redis:
+    image: redis:7-alpine
+    container_name: pterodactyl-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}  # Set in .env file
+    volumes:
+      - ./redis:/data
+    networks:
+      - homelab
+
+  # Pterodactyl Panel
+  panel:
+    image: ghcr.io/pterodactyl/panel:latest
+    container_name: pterodactyl-panel
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - APP_URL=${APP_URL}  # e.g., http://192.168.1.10
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=panel
+      - DB_USERNAME=pterodactyl
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - ./panel:/var/www/html/storage
+      - ./panel-ssl:/etc/letsencrypt
+    networks:
+      - homelab
+    depends_on:
+      - mariadb
+      - redis
+
+  # Uptime Kuma - Monitoring
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - ./uptime-kuma:/app/data
+    ports:
+      - "3001:3001"
+    networks:
+      - homelab
+
+  # Authentik - Authentication (Optional)
+  authentik:
+    image: ghcr.io/goauthentik/authentik:latest
+    container_name: authentik
+    restart: unless-stopped
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}  # Generate a random key
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+    volumes:
+      - ./authentik/media:/media
+      - ./authentik/certs:/certs
+      - ./authentik/custom-templates:/templates
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    networks:
+      - homelab
+
+  # Portainer - Docker Management UI
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./portainer/data:/data
+    ports:
+      - "8000:9000"  # HTTP - access at http://192.168.1.10:8000
+      - "8443:9443"  # HTTPS - access at https://192.168.1.10:8443
+    networks:
+      - homelab
+
+  # Homepage - Landing Page Dashboard
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    volumes:
+      - ./homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - homelab
+
+  # UniFi Controller - Network Management
+  unifi:
+    image: lscr.io/linuxserver/unifi-controller:latest
+    container_name: unifi
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./unifi:/config
+    ports:
+      - "8443:8443"  # Web UI
+      - "3478:3478/udp"  # STUN
+      - "10001:10001/udp"  # AP discovery
+      - "8080:8080"  # Device/controller communication
+      - "1900:1900/udp"  # Make controller discoverable on L2 network
+      - "8843:8843"  # HTTPS portal redirect
+      - "8880:8880"  # HTTP portal redirect
+      - "6789:6789"  # Mobile speed test
+      - "5514:5514/udp"  # Remote syslog
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    driver: bridge
+
