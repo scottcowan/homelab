@@ -91,10 +91,11 @@ sed -i "s|DB_PASSWORD=your_db_password_here|DB_PASSWORD=$(openssl rand -base64 3
 sed -i "s|DB_ROOT_PASSWORD=your_db_root_password_here|DB_ROOT_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|REDIS_PASSWORD=your_redis_password_here|REDIS_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|AUTHENTIK_SECRET_KEY=generate_random_key_here|AUTHENTIK_SECRET_KEY=$(openssl rand -base64 32)|g" .env
+sed -i "s|APP_KEY=base64:generate_app_key_here|APP_KEY=base64:$(openssl rand -base64 32)|g" .env
 sed -i "s|APP_URL=.*|APP_URL=http://192.168.1.10|g" .env
 
 # Verify
-grep -E "PASSWORD|SECRET_KEY|APP_URL" .env
+grep -E "PASSWORD|SECRET_KEY|APP_URL|APP_KEY" .env
 ```
 
 ## Step 5: Start Core Services (Database & Redis First)
@@ -135,6 +136,8 @@ docker compose up -d portainer
 
 ### Option A: Docker Installation
 
+**Important:** Make sure `APP_KEY` is set in your `.env` file before starting the panel. The setup script automatically generates this, but if you're setting up manually, ensure it's configured.
+
 ```bash
 # Start the panel
 docker compose up -d panel
@@ -142,6 +145,10 @@ docker compose up -d panel
 # Wait for it to start, then initialize
 docker compose exec panel php artisan p:user:make
 ```
+
+**Troubleshooting:** If you see an error about "no application encryption key has been specified", make sure:
+1. `APP_KEY` is set in your `.env` file (should be in format `base64:...`)
+2. You've restarted the panel container after adding `APP_KEY`: `docker compose restart panel`
 
 ### Option B: Host Installation (Recommended)
 

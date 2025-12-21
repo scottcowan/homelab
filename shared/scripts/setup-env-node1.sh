@@ -17,6 +17,10 @@ sed -i "s|DB_ROOT_PASSWORD=your_db_root_password_here|DB_ROOT_PASSWORD=$(openssl
 sed -i "s|REDIS_PASSWORD=your_redis_password_here|REDIS_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|AUTHENTIK_SECRET_KEY=generate_random_key_here|AUTHENTIK_SECRET_KEY=$(openssl rand -base64 32)|g" .env
 
+# Generate APP_KEY for Pterodactyl Panel (base64 format)
+APP_KEY_VALUE="base64:$(openssl rand -base64 32)"
+sed -i "s|APP_KEY=base64:generate_app_key_here|APP_KEY=${APP_KEY_VALUE}|g" .env
+
 # Update APP_URL (automatically detect IP or use default)
 NODE_IP=$(hostname -I | awk '{print $1}')
 if [ -z "$NODE_IP" ]; then
@@ -28,7 +32,7 @@ sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 echo "✅ Node 1 passwords generated and .env file updated!"
 echo ""
 echo "Updated values (partial display):"
-grep -E "PASSWORD|SECRET_KEY|APP_URL" .env | sed 's/=.*/=***hidden***/'
+grep -E "PASSWORD|SECRET_KEY|APP_URL|APP_KEY" .env | sed 's/=.*/=***hidden***/'
 
 echo ""
 echo "Done! Your Node 1 .env file is ready."
