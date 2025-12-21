@@ -16,6 +16,8 @@ sed -i "s|DB_PASSWORD=your_db_password_here|DB_PASSWORD=$(openssl rand -base64 3
 sed -i "s|DB_ROOT_PASSWORD=your_db_root_password_here|DB_ROOT_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|REDIS_PASSWORD=your_redis_password_here|REDIS_PASSWORD=$(openssl rand -base64 32)|g" .env
 sed -i "s|AUTHENTIK_SECRET_KEY=generate_random_key_here|AUTHENTIK_SECRET_KEY=$(openssl rand -base64 32)|g" .env
+sed -i "s|AUTHENTIK_DB_PASSWORD=your_authentik_db_password_here|AUTHENTIK_DB_PASSWORD=$(openssl rand -base64 32)|g" .env
+sed -i "s|AUTHENTIK_REDIS_PASSWORD=your_authentik_redis_password_here|AUTHENTIK_REDIS_PASSWORD=$(openssl rand -base64 32)|g" .env
 
 # Generate APP_KEY for Pterodactyl Panel (base64 format)
 APP_KEY_VALUE="base64:$(openssl rand -base64 32)"

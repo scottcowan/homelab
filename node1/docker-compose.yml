@@ -68,13 +68,44 @@ services:
       - homelab
 
   # Authentik - Authentication (Optional)
+  # Note: Authentik requires PostgreSQL and Redis
+  # For a full setup, see: https://goauthentik.io/docs/installation/docker-compose
+  # This is a simplified single-container setup using beryju/authentik
+  authentik-postgres:
+    image: postgres:15-alpine
+    container_name: authentik-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=authentik
+      - POSTGRES_USER=authentik
+      - POSTGRES_PASSWORD=${AUTHENTIK_DB_PASSWORD:-change_me}
+    volumes:
+      - ./authentik/postgres:/var/lib/postgresql/data
+    networks:
+      - homelab
+
+  authentik-redis:
+    image: redis:7-alpine
+    container_name: authentik-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${AUTHENTIK_REDIS_PASSWORD:-change_me}
+    volumes:
+      - ./authentik/redis:/data
+    networks:
+      - homelab
+
   authentik:
-    image: ghcr.io/goauthentik/authentik:latest
+    image: beryju/authentik:latest
     container_name: authentik
     restart: unless-stopped
     environment:
-      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}  # Generate a random key
-      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD:-change_me}
+      - AUTHENTIK_REDIS__HOST=authentik-redis
+      - AUTHENTIK_REDIS__PASSWORD=${AUTHENTIK_REDIS_PASSWORD:-change_me}
     volumes:
       - ./authentik/media:/media
       - ./authentik/certs:/certs
@@ -84,6 +115,9 @@ services:
       - "9443:9443"
     networks:
       - homelab
+    depends_on:
+      - authentik-postgres
+      - authentik-redis
 
   # Portainer - Docker Management UI
   portainer:

@@ -228,6 +228,31 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
+### Supervisord "unix_http_server" authentication warning
+If you see this warning in the Pterodactyl Panel logs:
+```
+CRIT server 'unix_http_server' running without any HTTP authentication checking
+```
+
+**This is safe to ignore for Docker deployments.** The warning indicates that Supervisord (which manages PHP-FPM and Nginx processes inside the container) doesn't have authentication configured for its Unix socket. However:
+
+- The socket is only accessible **inside the container** (not from the host)
+- Docker provides network isolation, so this doesn't pose a security risk
+- This is a common pattern in containerized applications
+
+The panel will function normally despite this warning. If you want to suppress it (optional), you would need to mount a custom `supervisord.conf` file, but this is not necessary for a secure deployment.
+
+### Authentik "registry: denied" error
+If you see a "registry: denied" error when trying to start Authentik:
+
+**This has been fixed** by updating the configuration to use the `beryju/authentik` image from Docker Hub instead of the GitHub Container Registry image. The new configuration also includes the required PostgreSQL and Redis services that Authentik needs.
+
+**If you still see the error:**
+1. Make sure you've updated your `docker-compose.yml` file with the latest version
+2. Pull the new images: `docker compose pull authentik authentik-postgres authentik-redis`
+3. Make sure your `.env` file includes `AUTHENTIK_DB_PASSWORD` and `AUTHENTIK_REDIS_PASSWORD` (run the setup script again if needed)
+4. Start Authentik: `docker compose up -d authentik-postgres authentik-redis authentik`
+
 ## Next Steps
 
 Once Node 1 is set up and working:
