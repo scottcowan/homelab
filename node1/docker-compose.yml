@@ -100,7 +100,7 @@ services:
       - homelab
 
   authentik:
-    image: authentik/server:latest
+    image: authentik/server:2025.10
     container_name: authentik
     restart: unless-stopped
     environment:
