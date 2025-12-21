@@ -83,6 +83,11 @@ services:
       - ./authentik/postgres:/var/lib/postgresql/data
     networks:
       - homelab
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentik"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   authentik-redis:
     image: redis:7-alpine
@@ -116,8 +121,10 @@ services:
     networks:
       - homelab
     depends_on:
-      - authentik-postgres
-      - authentik-redis
+      authentik-postgres:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_started
 
   # Portainer - Docker Management UI
   portainer:
