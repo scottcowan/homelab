@@ -3,7 +3,7 @@
 DB_PASSWORD=your_db_password_here
 DB_ROOT_PASSWORD=your_db_root_password_here
 REDIS_PASSWORD=your_redis_password_here
-APP_URL=http://192.168.1.10
+APP_URL=http://127.0.0.1
 APP_KEY=base64:generate_app_key_here
 
 # Authentik Configuration
@@ -13,6 +13,6 @@ AUTHENTIK_REDIS_PASSWORD=your_authentik_redis_password_here
 
 # Homepage Configuration
 # Comma-separated list of allowed hosts (IPs or hostnames)
-# Default includes: localhost,127.0.0.1,192.168.1.10,192.168.1.88
+# Default includes: localhost,127.0.0.1
 # Add your Node 1 IP and any other IPs you'll access Homepage from
-HOMEPAGE_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10,192.168.1.88
+HOMEPAGE_ALLOWED_HOSTS=localhost,127.0.0.1

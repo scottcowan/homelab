@@ -26,14 +26,14 @@ sed -i "s|APP_KEY=base64:generate_app_key_here|APP_KEY=${APP_KEY_VALUE}|g" .env
 # Update APP_URL (automatically detect IP or use default)
 NODE_IP=$(hostname -I | awk '{print $1}')
 if [ -z "$NODE_IP" ]; then
-    NODE_IP="192.168.1.10"
+    NODE_IP=""
     echo "Could not detect IP, using default: $NODE_IP"
 fi
 sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 
 # Set HOMEPAGE_ALLOWED_HOSTS (include common IPs plus detected IP)
-HOMEPAGE_HOSTS="localhost,127.0.0.1,192.168.1.10,192.168.1.88"
-if [ "$NODE_IP" != "192.168.1.10" ]; then
+HOMEPAGE_HOSTS="localhost,127.0.0.1"
+if [ "$NODE_IP" != "" ]; then
     # Add detected IP if it's different from default
     HOMEPAGE_HOSTS="${HOMEPAGE_HOSTS},${NODE_IP}"
 fi
