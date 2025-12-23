@@ -31,11 +31,11 @@ if [ -z "$NODE_IP" ]; then
 fi
 sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 
-# Set HOMEPAGE_ALLOWED_HOSTS (include common IPs plus detected IP)
-HOMEPAGE_HOSTS="localhost,127.0.0.1"
-if [ "$NODE_IP" != "" ]; then
-    # Add detected IP if it's different from default
-    HOMEPAGE_HOSTS="${HOMEPAGE_HOSTS},${NODE_IP}"
+# Set HOMEPAGE_ALLOWED_HOSTS (include common IPs plus detected IP, with ports)
+HOMEPAGE_HOSTS="localhost:3000,127.0.0.1:3000"
+if [ "$NODE_IP" != "" ] && [ "$NODE_IP" != "" ]; then
+    # Add detected IP with port if it's different from default
+    HOMEPAGE_HOSTS="${HOMEPAGE_HOSTS},${NODE_IP}:3000"
 fi
 
 # Update or add HOMEPAGE_ALLOWED_HOSTS

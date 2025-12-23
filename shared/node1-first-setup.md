@@ -305,14 +305,16 @@ If you see errors like `Host validation failed for: 192.168.1.88:3000`:
 
 **This has been fixed** by adding `HOMEPAGE_ALLOWED_HOSTS` environment variable to the Homepage service in `docker-compose.yml`.
 
+**Important:** Homepage requires the port number in the host format (e.g., `192.168.1.10:3000`, not just `192.168.1.10`).
+
 **If you still see the issue:**
-1. Make sure your `docker-compose.yml` includes the `HOMEPAGE_ALLOWED_HOSTS` environment variable
-2. If accessing from a different IP, add it to your `.env` file or update `docker-compose.yml`:
+1. Make sure your `docker-compose.yml` includes the `HOMEPAGE_ALLOWED_HOSTS` environment variable with ports
+2. If accessing from a different IP, add it to your `.env` file or update `docker-compose.yml` with the port:
    ```bash
-   HOMEPAGE_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10,192.168.1.88,YOUR_IP_HERE
+   HOMEPAGE_ALLOWED_HOSTS=localhost:3000,127.0.0.1:3000,YOUR_IP:3000
    ```
 3. Restart Homepage: `docker compose restart homepage`
-4. The default configuration includes common IPs, but you may need to add your specific IP
+4. The default configuration includes common IPs with port 3000, but you may need to add your specific IP with the port
 
 ## Next Steps
 

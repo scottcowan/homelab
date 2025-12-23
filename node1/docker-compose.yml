@@ -151,7 +151,7 @@ services:
     container_name: homepage
     restart: unless-stopped
     environment:
-      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS:-localhost:3000,127.0.0.1:3000}
       - TZ=Europe/London
     volumes:
       - ./homepage:/app/config
