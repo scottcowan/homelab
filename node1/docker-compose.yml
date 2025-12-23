@@ -104,6 +104,7 @@ services:
     container_name: authentik
     restart: unless-stopped
     command: server
+    user: root
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
       - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
@@ -149,6 +150,9 @@ services:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     restart: unless-stopped
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - TZ=Europe/London
     volumes:
       - ./homepage:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro

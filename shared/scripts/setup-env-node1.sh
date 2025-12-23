@@ -31,10 +31,30 @@ if [ -z "$NODE_IP" ]; then
 fi
 sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 
+# Set HOMEPAGE_ALLOWED_HOSTS (include common IPs plus detected IP)
+HOMEPAGE_HOSTS="localhost,127.0.0.1,192.168.1.10,192.168.1.88"
+if [ "$NODE_IP" != "192.168.1.10" ]; then
+    # Add detected IP if it's different from default
+    HOMEPAGE_HOSTS="${HOMEPAGE_HOSTS},${NODE_IP}"
+fi
+
+# Update or add HOMEPAGE_ALLOWED_HOSTS
+if grep -q "HOMEPAGE_ALLOWED_HOSTS=" .env; then
+    sed -i "s|HOMEPAGE_ALLOWED_HOSTS=.*|HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_HOSTS}|g" .env
+else
+    # Add it if it doesn't exist
+    echo "" >> .env
+    echo "# Homepage Configuration" >> .env
+    echo "HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_HOSTS}" >> .env
+fi
+
 echo "✅ Node 1 passwords generated and .env file updated!"
 echo ""
 echo "Updated values (partial display):"
 grep -E "PASSWORD|SECRET_KEY|APP_URL|APP_KEY" .env | sed 's/=.*/=***hidden***/'
+echo ""
+echo "Configuration values:"
+grep -E "HOMEPAGE_ALLOWED_HOSTS" .env
 
 echo ""
 echo "Done! Your Node 1 .env file is ready."

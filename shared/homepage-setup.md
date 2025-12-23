@@ -227,3 +227,23 @@ docker compose restart homepage
 
 Or Homepage will auto-reload changes (check logs to confirm).
 
+## Troubleshooting
+
+### Host Validation Failed Error
+
+If you see errors like:
+```
+error: Host validation failed for: 192.168.1.88:3000. Hint: Set the HOMEPAGE_ALLOWED_HOSTS environment variable
+```
+
+**Solution:**
+1. The `HOMEPAGE_ALLOWED_HOSTS` environment variable is already configured in `docker-compose.yml` with default values
+2. If you're accessing from a different IP, add it to your `.env` file:
+   ```bash
+   HOMEPAGE_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10,192.168.1.88,YOUR_IP_HERE
+   ```
+3. Or update the `docker-compose.yml` directly to include your IP
+4. Restart Homepage: `docker compose restart homepage`
+
+**Note:** The default configuration includes common IPs (localhost, 127.0.0.1, 192.168.1.10, 192.168.1.88). If you need to add more, separate them with commas.
+

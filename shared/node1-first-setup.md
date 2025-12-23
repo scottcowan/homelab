@@ -170,6 +170,12 @@ docker compose up -d uptime-kuma
 
 # Start Authentik (optional - authentication)
 # Note: Authentik requires PostgreSQL and Redis, which will start automatically
+
+# First, create required directories for Authentik
+mkdir -p authentik/media/public authentik/media/private authentik/certs authentik/custom-templates
+chmod -R 777 authentik/media authentik/certs authentik/custom-templates
+
+# Then start Authentik services
 docker compose up -d authentik-postgres authentik-redis authentik
 
 # Start Homepage (landing page dashboard)
@@ -274,6 +280,39 @@ If Authentik is exiting with code 0 and continuously restarting:
 2. Restart Authentik: `docker compose restart authentik`
 3. Check logs: `docker compose logs -f authentik` to see if the server is starting properly
 4. Verify environment variables are set correctly (especially `AUTHENTIK_SECRET_KEY`)
+
+### Authentik "Permission denied: /media/public" error
+If you see `PermissionError: [Errno 13] Permission denied: '/media/public'`:
+
+**This has been fixed** by adding `user: root` to the Authentik service in `docker-compose.yml` and pre-creating the required directories.
+
+**To fix this:**
+1. Stop Authentik: `docker compose stop authentik`
+2. Create the required directories with proper permissions:
+   ```bash
+   cd ~/homelab/node1
+   mkdir -p authentik/media/public authentik/media/private authentik/certs authentik/custom-templates
+   chmod -R 777 authentik/media authentik/certs authentik/custom-templates
+   ```
+3. Make sure your `docker-compose.yml` includes `user: root` in the `authentik` service (already added)
+4. Start Authentik: `docker compose up -d authentik`
+5. Check logs: `docker compose logs -f authentik` to verify it's working
+
+**Note:** Running as root is acceptable for a homelab environment. For production, you'd want to use a specific user ID.
+
+### Homepage "Host validation failed" error
+If you see errors like `Host validation failed for: 192.168.1.88:3000`:
+
+**This has been fixed** by adding `HOMEPAGE_ALLOWED_HOSTS` environment variable to the Homepage service in `docker-compose.yml`.
+
+**If you still see the issue:**
+1. Make sure your `docker-compose.yml` includes the `HOMEPAGE_ALLOWED_HOSTS` environment variable
+2. If accessing from a different IP, add it to your `.env` file or update `docker-compose.yml`:
+   ```bash
+   HOMEPAGE_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10,192.168.1.88,YOUR_IP_HERE
+   ```
+3. Restart Homepage: `docker compose restart homepage`
+4. The default configuration includes common IPs, but you may need to add your specific IP
 
 ## Next Steps
 
