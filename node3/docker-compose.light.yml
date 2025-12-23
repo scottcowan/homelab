@@ -6,8 +6,6 @@
 #
 # OR rename: mv docker-compose.yml docker-compose.full.yml && mv docker-compose.light.yml docker-compose.yml
 
-version: '3.8'
-
 services:
   # Grafana - Monitoring Dashboard
   grafana:
