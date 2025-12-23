@@ -169,8 +169,17 @@ docker compose up -d mariadb redis
 docker compose up -d uptime-kuma
 
 # Start Authentik (optional - authentication)
-docker compose up -d authentik
+# Note: Authentik requires PostgreSQL and Redis, which will start automatically
+docker compose up -d authentik-postgres authentik-redis authentik
+
+# Start Homepage (landing page dashboard)
+docker compose up -d homepage
+
+# Start UniFi Controller (network management)
+docker compose up -d unifi
 ```
+
+**Note:** For initial setup, it's recommended to start services individually so you can monitor logs and troubleshoot. Once everything is working, you can use `docker compose up -d` to start all services at once.
 
 ## Step 9: Verify Everything is Running
 
@@ -192,6 +201,8 @@ Once everything is running, you can access:
 - **Pterodactyl Panel**: http://YOUR_IP (port 80)
 - **Uptime Kuma**: http://YOUR_IP:3001
 - **Authentik**: http://YOUR_IP:9000 (if enabled)
+- **Homepage**: http://YOUR_IP:3000
+- **UniFi Controller**: https://YOUR_IP:8443 (accept self-signed certificate)
 
 ## Troubleshooting
 
@@ -252,6 +263,17 @@ If you see a "registry: denied" error when trying to start Authentik:
 2. Pull the new images: `docker compose pull authentik authentik-postgres authentik-redis`
 3. Make sure your `.env` file includes `AUTHENTIK_DB_PASSWORD` and `AUTHENTIK_REDIS_PASSWORD` (run the setup script again if needed)
 4. Start Authentik: `docker compose up -d authentik-postgres authentik-redis authentik`
+
+### Authentik "exited with code 0" (restarting loop)
+If Authentik is exiting with code 0 and continuously restarting:
+
+**This has been fixed** by adding `command: server` to the Authentik service in `docker-compose.yml`. The container needs an explicit command to run the server process.
+
+**If you still see the issue:**
+1. Make sure your `docker-compose.yml` includes `command: server` in the `authentik` service
+2. Restart Authentik: `docker compose restart authentik`
+3. Check logs: `docker compose logs -f authentik` to see if the server is starting properly
+4. Verify environment variables are set correctly (especially `AUTHENTIK_SECRET_KEY`)
 
 ## Next Steps
 

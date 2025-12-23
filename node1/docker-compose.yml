@@ -103,6 +103,7 @@ services:
     image: authentik/server:2025.10
     container_name: authentik
     restart: unless-stopped
+    command: server
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
       - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
