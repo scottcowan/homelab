@@ -98,7 +98,7 @@ services:
       - homelab
 
   authentik:
-    image: authentik/server:2024.10
+    image: beryju/authentik:2025.4.4
     container_name: authentik
     restart: unless-stopped
     command: server
