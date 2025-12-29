@@ -105,6 +105,7 @@ services:
     user: root
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_URL=${AUTHENTIK_URL}
       - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
       - AUTHENTIK_POSTGRESQL__USER=authentik
       - AUTHENTIK_POSTGRESQL__NAME=authentik

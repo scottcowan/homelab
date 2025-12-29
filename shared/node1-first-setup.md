@@ -316,6 +316,89 @@ If you see errors like `Host validation failed for: 192.168.1.88:3000`:
 3. Restart Homepage: `docker compose restart homepage`
 4. The default configuration includes common IPs with port 3000, but you may need to add your specific IP with the port
 
+### Authentik "Not Found" / Missing Default Authentication Flow
+If you see a "Not Found" error when accessing Authentik at `http://YOUR_IP:9000/flows/-/default/authentication/`:
+
+**This is normal for a fresh Authentik installation.** The default authentication flow needs to be created. You need to create an admin user first.
+
+**To fix this:**
+
+1. **Create an admin group and user:**
+   ```bash
+   cd ~/homelab/node1
+   
+   # Step 1: Access Django shell
+   docker compose exec authentik ak shell
+   ```
+   
+   Then in the Python shell, copy and paste this entire block at once:
+   ```python
+   from authentik.core.models import User
+   import secrets
+   import string
+   
+   # Set username to admin
+   username = "admin"
+   email_input = input("Email (optional, press Enter to skip): ")
+   
+   # Generate a strong password (32 characters with letters, digits, and special chars)
+   alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+   password = ''.join(secrets.choice(alphabet) for i in range(32))
+   
+   # Create the user
+   user = User.objects.create_user(
+       username=username,
+       email=email_input if email_input else "",
+       password=password
+   )
+   
+   # Make sure the user is active
+   user.is_active = True
+   user.save()
+   
+   print(f"✅ Created user: {user.username}")
+   print(f"🔑 Generated password: {password}")
+   print("⚠️  IMPORTANT: Save this password now! It won't be shown again.")
+   exit()
+   ```
+   
+   **Important:** Copy and paste the entire code block at once. Don't run it line by line, as errors in one line will prevent subsequent lines from executing.
+   
+   ```bash
+   # Step 2: Add user to admin group (replace 'admin' with your username)
+   docker compose exec authentik ak create_admin_group admin
+   ```
+   
+   This will:
+   - Create a user account with the credentials you provide
+   - Create the admin group (if it doesn't exist)
+   - Add the user to the admin group
+   
+   **Note:** Authentik 2025.10+ has disabled `createsuperuser`. Use the Django shell method above to create your first admin user.
+
+2. **Access the admin interface:**
+   - Go to: `http://YOUR_IP:9000/if/admin/`
+   - Log in with the admin credentials you just created
+
+3. **Set up the default authentication flow:**
+   - In the admin interface, go to **Flows** → **Instances**
+   - Click **Create** to create a new flow
+   - Name it "default-authentication" (or similar)
+   - Add authentication stages (e.g., password authentication)
+   - Save the flow
+
+4. **Configure the default flow:**
+   - Go to **Settings** → **Brands**
+   - Edit your brand
+   - Set the **Default authentication flow** to the flow you just created
+   - Save
+
+**Alternative: Use the setup wizard**
+- After creating the admin user, try accessing `http://YOUR_IP:9000/if/flow/default-authentication/`
+- Or go to `http://YOUR_IP:9000/if/admin/` and use the setup wizard if available
+
+**Note:** The default authentication flow is required for users to log in. Once configured, users will be able to access Authentik's login page.
+
 ## Next Steps
 
 Once Node 1 is set up and working:

@@ -31,6 +31,20 @@ if [ -z "$NODE_IP" ]; then
 fi
 sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 
+# Set AUTHENTIK_URL (same as APP_URL but with port 9000)
+if [ -n "$NODE_IP" ]; then
+    AUTHENTIK_URL="http://${NODE_IP}:9000"
+fi
+# Update or add AUTHENTIK_URL
+if grep -q "AUTHENTIK_URL=" .env; then
+    sed -i "s|AUTHENTIK_URL=.*|AUTHENTIK_URL=${AUTHENTIK_URL}|g" .env
+else
+    # Add it if it doesn't exist
+    echo "" >> .env
+    echo "# Authentik Configuration" >> .env
+    echo "AUTHENTIK_URL=${AUTHENTIK_URL}" >> .env
+fi
+
 # Set HOMEPAGE_ALLOWED_HOSTS (include common IPs plus detected IP, with ports)
 HOMEPAGE_HOSTS="localhost:3000,127.0.0.1:3000"
 if [ -n "$NODE_IP" ]; then
@@ -54,7 +68,7 @@ echo "Updated values (partial display):"
 grep -E "PASSWORD|SECRET_KEY|APP_URL|APP_KEY" .env | sed 's/=.*/=***hidden***/'
 echo ""
 echo "Configuration values:"
-grep -E "HOMEPAGE_ALLOWED_HOSTS" .env
+grep -E "HOMEPAGE_ALLOWED_HOSTS|AUTHENTIK_URL" .env
 
 echo ""
 echo "Done! Your Node 1 .env file is ready."
