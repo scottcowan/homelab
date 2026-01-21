@@ -34,3 +34,10 @@ echo ""
 echo "Note: INFLUXDB_TOKEN will be set after InfluxDB setup (see above)"
 echo "Done! Your Node 3 .env file is ready (except INFLUXDB_TOKEN)."
 
+
+
+
+
+
+
+

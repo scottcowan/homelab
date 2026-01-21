@@ -19,20 +19,46 @@
    - SSH access
    - Package mirror: UK
 
+4. **Recommended Disk Layout (SSD + HDD)** ✅
+   - If a node has both an SSD and HDD:
+     - **Use the SSD for**:
+       - OS (root filesystem `/`)
+       - Docker data (`/var/lib/docker`)
+       - Databases and high‑I/O app data
+     - **Use the HDD for**:
+       - Bulk/cold storage
+       - Backups or archive data
+   - During Ubuntu install:
+     - Choose the **SSD** as the installation target (guided partitioning is fine)
+     - You can leave the HDD unpartitioned and set it up after install
+   - After install (optional, per node):
+     - Create a single partition on the HDD and mount it at e.g. `/mnt/hdd`
+     - Use it only for data that doesn’t need SSD speed
+
 ## What's Different on Each Node
 
 ### Node 1 (192.168.1.10)
 
+**Recommended Disk Layout (Node 1):**
+- **500GB SSD**:
+  - OS root (`/`)
+  - Docker data (`/var/lib/docker`)
+  - High‑I/O app data (databases, containers)
+- **500GB 5400rpm HDD**:
+  - Optional: mount as `/mnt/hdd` for bulk storage or local backups
+  - Do **not** use for Docker or databases – keep those on SSD
+
 **Setup Steps**:
-1. ✅ Install Docker
-2. ✅ Copy homelab files to `~/homelab/node1/`
-3. ✅ Create `.env` file with:
+1. ✅ Install Ubuntu to the **SSD** (use guided partitioning on the SSD)
+2. ✅ Install Docker
+3. ✅ Copy homelab files to `~/homelab/node1/`
+4. ✅ Create `.env` file with:
    - DB_PASSWORD
    - DB_ROOT_PASSWORD
    - REDIS_PASSWORD
    - AUTHENTIK_SECRET_KEY
    - APP_URL=http://192.168.1.10
-4. ✅ Start services: mariadb, redis, portainer, homepage, unifi, uptime-kuma, authentik, panel
+5. ✅ Start services: mariadb, redis, portainer, homepage, unifi, uptime-kuma, authentik, panel
 
 **Services**:
 - Pterodactyl Panel

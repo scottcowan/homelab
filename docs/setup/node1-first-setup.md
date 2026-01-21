@@ -8,8 +8,84 @@ This guide will walk you through setting up Node 1 on your first mini PC.
 - Static IP configured (recommended: 192.168.1.10)
 - SSH access enabled
 - User account with sudo privileges
+- For your current hardware: **16GB RAM**, **500GB SSD**, **500GB 5400rpm HDD**
 
-**Note**: This guide is for **Node 1 only**. See `shared/node-setup-summary.md` for what's needed on each node.
+**Note**: This guide is for **Node 1 only**. See `docs/setup/node-setup-summary.md` for what's needed on each node.
+
+## Recommended Disk Layout (SSD + HDD)
+
+Node 1 has a **500GB SSD** and a **500GB 5400rpm HDD**. The goal is:
+- SSD = **fast OS + Docker + databases + high‑I/O app data**
+- HDD = **slow bulk / archive storage (optional)**
+
+### During Ubuntu Installation
+
+When you (re)install Ubuntu Server:
+
+1. **Select the SSD as the install target**:
+   - In the installer, identify the SSD (usually `/dev/sda` or labelled as SSD, 500GB).
+   - Use **Guided – use entire disk** on the **SSD only**.
+   - Do **not** include the HDD in the same LVM or root filesystem.
+
+2. **Leave the HDD unpartitioned** (or unused) during install:
+   - You’ll set it up later from the running system if you want to use it.
+
+Result after install:
+- Root filesystem (`/`) lives on the SSD.
+- Docker and most application data will, by default, live on the SSD under `/var/lib/docker` and your homelab directory.
+
+### After Installation: Optional HDD Setup
+
+If you want to use the 500GB HDD for bulk storage (backups, temp files, etc.):
+
+```bash
+# See disks
+lsblk
+
+# Assume HDD is /dev/sdb (double-check with size!)
+# Create a single partition
+sudo parted /dev/sdb --script mklabel gpt
+sudo parted /dev/sdb --script mkpart primary ext4 0% 100%
+
+# Format the new partition
+sudo mkfs.ext4 /dev/sdb1
+
+# Create mount point
+sudo mkdir -p /mnt/hdd
+
+# Get the UUID
+sudo blkid /dev/sdb1
+
+# Edit /etc/fstab to mount it automatically at boot
+sudo nano /etc/fstab
+```
+
+Add a line like (replace `UUID=...` with the value from `blkid`):
+
+```fstab
+UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx /mnt/hdd ext4 defaults 0 2
+```
+
+Then:
+
+```bash
+# Mount all entries from /etc/fstab
+sudo mount -a
+
+# Verify
+df -h | grep /mnt/hdd
+```
+
+**Usage recommendation:**
+- Use `/mnt/hdd` only for:
+  - Local backups
+  - Archive data
+  - Non‑performance‑critical files
+- Keep:
+  - `/var/lib/docker`
+  - `~/homelab`
+  - Databases and high‑I/O services  
+on the **SSD** for best performance.
 
 ## Step 1: Initial System Setup
 

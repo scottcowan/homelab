@@ -18,3 +18,8 @@ AUTHENTIK_URL=http://127.0.0.1:9000
 # Default includes: localhost:3000,127.0.0.1:3000
 # Add your Node 1 IP and any other IPs you'll access Homepage from (include :3000 port)
 HOMEPAGE_ALLOWED_HOSTS=localhost:3000,127.0.0.1:3000
+
+# AMP (Application Management Panel) Configuration
+# Get license key from https://cubecoders.com/AMP
+# License tiers: Standard (~£7.50/month, 5 instances), Professional (~£15/month, 15 instances), Advanced (~£30/month, 50 instances)
+AMP_LICENSE_KEY=your_amp_license_key_here

@@ -42,3 +42,10 @@ grep "WINGS_TOKEN" .env | sed 's/=.*/=***hidden***/'
 echo ""
 echo "Done! Your Node 2 .env file is ready."
 
+
+
+
+
+
+
+

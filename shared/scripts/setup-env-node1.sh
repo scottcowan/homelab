@@ -23,11 +23,50 @@ sed -i "s|AUTHENTIK_REDIS_PASSWORD=your_authentik_redis_password_here|AUTHENTIK_
 APP_KEY_VALUE="base64:$(openssl rand -base64 32)"
 sed -i "s|APP_KEY=base64:generate_app_key_here|APP_KEY=${APP_KEY_VALUE}|g" .env
 
+# Detect IP address (prefer wired interface over wireless)
+detect_ip() {
+    # First, try to find wired interfaces (eth0, enp*, en*, ens*)
+    WIRED_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
+    # Try to get IP from wired interface specifically
+    for interface in $(ip link show | grep -oP '(?<=^\d+:\s)(eth\d+|enp\d+s\d+|en\d+|ens\d+)' | grep -v 'lo' | head -1); do
+        if [ -n "$interface" ]; then
+            WIRED_IP=$(ip -4 addr show "$interface" | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
+            if [ -n "$WIRED_IP" ] && [ "$WIRED_IP" != "127.0.0.1" ]; then
+                echo "$WIRED_IP"
+                return 0
+            fi
+        fi
+    done
+    
+    # If no wired interface found, try wireless (wlan*, wlp*)
+    for interface in $(ip link show | grep -oP '(?<=^\d+:\s)(wlan\d+|wlp\d+s\d+)' | head -1); do
+        if [ -n "$interface" ]; then
+            WIRELESS_IP=$(ip -4 addr show "$interface" | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
+            if [ -n "$WIRELESS_IP" ] && [ "$WIRELESS_IP" != "127.0.0.1" ]; then
+                echo "$WIRELESS_IP"
+                return 0
+            fi
+        fi
+    done
+    
+    # Fallback to hostname -I (gets all IPs)
+    ALL_IPS=$(hostname -I | awk '{print $1}')
+    if [ -n "$ALL_IPS" ] && [ "$ALL_IPS" != "127.0.0.1" ]; then
+        echo "$ALL_IPS"
+        return 0
+    fi
+    
+    return 1
+}
+
 # Update APP_URL (automatically detect IP or use default)
-NODE_IP=$(hostname -I | awk '{print $1}')
+NODE_IP=$(detect_ip)
 if [ -z "$NODE_IP" ]; then
-    NODE_IP=""
-    echo "Could not detect IP, using default: $NODE_IP"
+    echo "⚠️  Could not detect IP address automatically"
+    echo "Please manually set APP_URL in .env file"
+    NODE_IP="127.0.0.1"
+else
+    echo "✅ Detected IP address: $NODE_IP"
 fi
 sed -i "s|APP_URL=.*|APP_URL=http://$NODE_IP|g" .env
 
