@@ -65,67 +65,70 @@ services:
     networks:
       - homelab
 
-  # Authentik - Authentication (Optional)
+  # Authentik - Authentication (Optional - Currently Not Used)
   # Note: Authentik requires PostgreSQL and Redis
   # For a full setup, see: https://goauthentik.io/docs/installation/docker-compose
   # This is a simplified single-container setup using beryju/authentik
-  authentik-postgres:
-    image: postgres:15-alpine
-    container_name: authentik-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=authentik
-      - POSTGRES_USER=authentik
-      - POSTGRES_PASSWORD=${AUTHENTIK_DB_PASSWORD:-change_me}
-    volumes:
-      - ./authentik/postgres:/var/lib/postgresql/data
-    networks:
-      - homelab
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U authentik"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # COMMENTED OUT - Not currently being used
+  # To enable, uncomment the three services below:
+  
+  # authentik-postgres:
+  #   image: postgres:15-alpine
+  #   container_name: authentik-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_DB=authentik
+  #     - POSTGRES_USER=authentik
+  #     - POSTGRES_PASSWORD=${AUTHENTIK_DB_PASSWORD:-change_me}
+  #   volumes:
+  #     - ./authentik/postgres:/var/lib/postgresql/data
+  #   networks:
+  #     - homelab
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U authentik"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-  authentik-redis:
-    image: redis:7-alpine
-    container_name: authentik-redis
-    restart: unless-stopped
-    command: redis-server --requirepass ${AUTHENTIK_REDIS_PASSWORD:-change_me}
-    volumes:
-      - ./authentik/redis:/data
-    networks:
-      - homelab
+  # authentik-redis:
+  #   image: redis:7-alpine
+  #   container_name: authentik-redis
+  #   restart: unless-stopped
+  #   command: redis-server --requirepass ${AUTHENTIK_REDIS_PASSWORD:-change_me}
+  #   volumes:
+  #     - ./authentik/redis:/data
+  #   networks:
+  #     - homelab
 
-  authentik:
-    image: beryju/authentik:2025.4.4
-    container_name: authentik
-    restart: unless-stopped
-    command: server
-    user: root
-    environment:
-      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
-      - AUTHENTIK_URL=${AUTHENTIK_URL}
-      - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
-      - AUTHENTIK_POSTGRESQL__USER=authentik
-      - AUTHENTIK_POSTGRESQL__NAME=authentik
-      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD:-change_me}
-      - AUTHENTIK_REDIS__HOST=authentik-redis
-      - AUTHENTIK_REDIS__PASSWORD=${AUTHENTIK_REDIS_PASSWORD:-change_me}
-    volumes:
-      - ./authentik/media:/media
-      - ./authentik/certs:/certs
-      - ./authentik/custom-templates:/templates
-    ports:
-      - "9000:9000"
-      - "9443:9443"
-    networks:
-      - homelab
-    depends_on:
-      authentik-postgres:
-        condition: service_healthy
-      authentik-redis:
-        condition: service_started
+  # authentik:
+  #   image: beryju/authentik:2025.4.4
+  #   container_name: authentik
+  #   restart: unless-stopped
+  #   command: server
+  #   user: root
+  #   environment:
+  #     - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+  #     - AUTHENTIK_URL=${AUTHENTIK_URL}
+  #     - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
+  #     - AUTHENTIK_POSTGRESQL__USER=authentik
+  #     - AUTHENTIK_POSTGRESQL__NAME=authentik
+  #     - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD:-change_me}
+  #     - AUTHENTIK_REDIS__HOST=authentik-redis
+  #     - AUTHENTIK_REDIS__PASSWORD=${AUTHENTIK_REDIS_PASSWORD:-change_me}
+  #   volumes:
+  #     - ./authentik/media:/media
+  #     - ./authentik/certs:/certs
+  #     - ./authentik/custom-templates:/templates
+  #   ports:
+  #     - "9000:9000"
+  #     - "9443:9443"
+  #   networks:
+  #     - homelab
+  #   depends_on:
+  #     authentik-postgres:
+  #       condition: service_healthy
+  #     authentik-redis:
+  #       condition: service_started
 
   # Portainer - Docker Management UI
   portainer:
@@ -140,7 +143,7 @@ services:
       - ./portainer/data:/data
     ports:
       - "8000:9000"  # HTTP - access at http://192.168.1.10:8000
-      - "8443:9443"  # HTTPS - access at https://192.168.1.10:8443
+      - "8444:9443"  # HTTPS - access at https://192.168.1.10:8444 (changed from 8443 to avoid conflict with UniFi)
     networks:
       - homelab
 
@@ -181,6 +184,268 @@ services:
       - "8880:8880"  # HTTP portal redirect
       - "6789:6789"  # Mobile speed test
       - "5514:5514/udp"  # Remote syslog
+    networks:
+      - homelab
+
+  # Prowlarr - Indexer Manager (Moved from Node 2)
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./prowlarr:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  # qBittorrent - Download Client (Moved from Node 2)
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qbittorrent:/config
+      - /mnt/nas/downloads:/downloads  # Mount your NAS download folder
+    ports:
+      - "8081:8080"  # Web UI (note: UniFi uses 8080, but this is external:internal mapping)
+      - "6881:6881"  # TCP
+      - "6881:6881/udp"  # UDP
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  # Sonarr - TV Shows (Moved from Node 2)
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./sonarr:/config
+      - /mnt/nas/tv:/tv  # Mount your NAS TV folder
+      - /mnt/nas/downloads:/downloads
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Radarr - Movies (Moved from Node 2)
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./radarr:/config
+      - /mnt/nas/movies:/movies  # Mount your NAS movies folder
+      - /mnt/nas/downloads:/downloads
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Lidarr - Music (Moved from Node 2)
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./lidarr:/config
+      - /mnt/nas/music:/music  # Mount your NAS music folder
+      - /mnt/nas/downloads:/downloads
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Readarr - Books & Audiobooks (Moved from Node 2)
+  readarr:
+    image: lscr.io/linuxserver/readarr:latest
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./readarr:/config
+      - /mnt/nas/audiobooks:/audiobooks  # Mount your NAS audiobooks folder
+      - /mnt/nas/books:/books  # Mount your NAS books folder (for ebooks)
+      - /mnt/nas/downloads:/downloads
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # Bazarr - Subtitles (Moved from Node 2)
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./bazarr:/config
+      - /mnt/nas/tv:/tv
+      - /mnt/nas/movies:/movies
+    ports:
+      - "6767:6767"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - sonarr
+      - radarr
+
+  # Overseerr - Request Management (Moved from Node 2)
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./overseerr:/config
+    ports:
+      - "5055:5055"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - sonarr
+      - radarr
+
+  # Ombi - Request Management (Alternative to Overseerr) (Moved from Node 2)
+  ombi:
+    image: lscr.io/linuxserver/ombi:latest
+    container_name: ombi
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./ombi:/config
+    ports:
+      - "3579:3579"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - sonarr
+      - radarr
+      - lidarr
+      - readarr
+
+  # Tautulli - Plex Monitoring & Analytics (Moved from Node 2)
+  tautulli:
+    image: tautulli/tautulli:latest
+    container_name: tautulli
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./tautulli:/config
+    ports:
+      - "8181:8181"
+    networks:
+      - homelab
+
+  # Mylar - Comic Book Management (Moved from Node 2)
+  mylar:
+    image: lscr.io/linuxserver/mylar:latest
+    container_name: mylar
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./mylar:/config
+      - /mnt/nas/comics:/comics  # Mount your NAS comics folder
+      - /mnt/nas/downloads:/downloads
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    networks:
+      - homelab
+    depends_on:
+      - prowlarr
+      - qbittorrent
+
+  # AMP - Application Management Panel (Game Server Management)
+  # Alternative/complement to Pterodactyl for game server management
+  # See docs/services/amp-control-panel-setup.md for full documentation
+  amp:
+    image: cubecoders/amp:latest
+    container_name: amp
+    restart: unless-stopped
+    ports:
+      - "8082:8080"  # Web UI - access at http://192.168.1.10:8082
+      # Game server ports will be configured per instance in AMP UI
+    environment:
+      - TZ=Europe/London
+      - AMP_LICENSE_KEY=${AMP_LICENSE_KEY}  # Set in .env file - get from https://cubecoders.com/AMP
+      - AMP_DATADIR=/ampdata
+    volumes:
+      - ./amp:/ampdata
+      - ./amp-instances:/instances  # Game server instance data
+      - /var/run/docker.sock:/var/run/docker.sock  # For Docker integration (if needed)
+    networks:
+      - homelab
+
+  # Audiobookshelf - Audiobook and Podcast Server
+  # Self-hosted audiobook streaming with mobile apps and progress tracking
+  # Integrates with Readarr - uses same /mnt/nas/audiobooks folder
+  # See docs/services/audiobookshelf-setup.md for full documentation
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    restart: unless-stopped
+    ports:
+      - "13378:80"  # Web UI - access at http://192.168.1.10:13378
+    environment:
+      - TZ=Europe/London
+      - AUDIOBOOKSHELF_CONFIG_DIR=/config
+      - AUDIOBOOKSHELF_METADATA_PATH=/metadata
+    volumes:
+      - ./audiobookshelf:/config
+      - ./audiobookshelf/metadata:/metadata
+      - /mnt/nas/audiobooks:/audiobooks:ro  # Read-only access to audiobooks (same as Readarr)
+      - /mnt/nas/podcasts:/podcasts:ro  # Optional: separate podcast folder
     networks:
       - homelab
 
